@@ -1,0 +1,44 @@
+---
+
+version: '3.8'
+
+services:
+  app:
+    working_dir: /var/local/app/
+    image: golang:1.16-buster
+    volumes:
+      - type: volume
+        source: go-pkg
+        target: /go/pkg
+      - type: volume
+        source: go-bin
+        target: /go/bin
+      - type: bind
+        source: ${PWD}/
+        target: /var/local/app/
+
+  db:
+    image: postgres:13-buster
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: hoge-user 
+      POSTGRES_PASSWORD: hoge-pass
+      POSTGRES_DB: hoge-db
+      POSTGRES_INITDB_ARGS: --encoding=UTF-8
+      TZ: Asia/Tokyo
+    volumes:
+      - type: bind
+        source: ${PWD}/sql/schema.sql
+        target: /docker-entrypoint-initdb.d/schema.sql
+
+  pgweb:
+    image: sosedoff/pgweb:0.11.8
+    environment:
+      DATABASE_URL: postgres://hoge-user:hoge-pass@db:5432/hoge-db?sslmode=disable
+    ports:
+      - 8081:8081
+
+volumes:
+  go-pkg:
+  go-bin:
